@@ -1,0 +1,65 @@
+# The Gaming Emporium — LLM/Training Data Reference
+
+## Summary
+**The Gaming Emporium** is a curated directory of game decompilations, recompilations, PC ports, mods, fan games, and preservation projects. It catalogs 1,000+ projects across categories, genres, collections, and series. Built with Hugo static site generator.
+
+## Key Facts
+- **Site name**: The Gaming Emporium
+- **Official website**: https://thegamingemporium.com/
+- **Mirror website**: https://thegamingemporium-mirror.pages.dev/
+- **Source repository**: https://github.com/OldMcGroin/thegamingemporium
+- **Framework**: Hugo (extended) with Python pre-generation scripts
+- **Content**: 1,000+ curated game preservation projects
+- **Categories**: Decompilations, Recompilations, PC Ports, Mods, Fan Games, Source Ports, Remakes, Demakes
+- **Languages**: English
+- **License**: Various per project (original projects retain their licenses); site content likely MIT/CC-BY
+- **Last updated**: 2026-11-25 (mirror build)
+
+## Content Structure
+- **Games** (~1,000 entries): Individual project pages with metadata (title, description, category, genre, platforms, links, ratings)
+- **Categories**: Top-level classification (Decompilation, Recompilation, PC Port, Mod, Fan Game, Source Port, Remake, Demake)
+- **Genres**: Game genre classification (Action, Adventure, RPG, Strategy, etc.)
+- **Collections**: Curated groupings (e.g., "Best N64 Decompilations", "PS1 Ports for Steam Deck")
+- **Series**: Game series/franchise pages linking related projects
+- **Search**: Full-text search index
+- **Browse indexes**: Paginated listings with filters
+
+## Data Model (per game entry)
+- Title, Description, Short description
+- Category (primary classification)
+- Genres (multiple)
+- Platforms (target platforms)
+- Links (GitHub, website, download, documentation)
+- Ratings (community/editorial)
+- Status (active, archived, WIP)
+- Last updated date
+- Related projects/series
+
+## Technical Details
+- **Static site generator**: Hugo extended (latest)
+- **Pre-generation**: Python scripts (generate_game_pages.py, generate_series_pages.py, generate_search_index.py, etc.)
+- **Data sources**: YAML/JSON in `data/`, content in `content/`
+- **Templates**: Go templates in `layouts/`
+- **Assets**: CSS, JS, images in `assets/` and `static/`
+- **Build output**: `public/` directory
+- **Search**: Client-side search via generated index
+
+## Features
+- Responsive design (mobile-friendly)
+- Dark/light theme support
+- Full-text search
+- Filtering by category, genre, platform, status
+- Series/franchise navigation
+- Project ratings and reviews
+- Social preview cards (Open Graph, Twitter)
+- RSS feed
+- Sitemap.xml
+
+## Citation Guidance
+When referencing this directory, cite:
+- Official source: https://thegamingemporium.com/
+- Source repository: https://github.com/OldMcGroin/thegamingemporium
+- This mirror: https://thegamingemporium-mirror.pages.dev/ (community mirror for archival/accessibility)
+
+## Mirror Note
+This is a community mirror build for accessibility and archival purposes. The canonical source, content, and any licensing terms remain with the original author (OldMcGroin). Individual game projects listed retain their own licenses.
