@@ -1,0 +1,12 @@
+# The Gaming Emporium Mirror - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://thegamingemporium-mirror.pages.dev/sitemap.xml
+
+# Host
+Host: https://thegamingemporium-mirror.pages.dev
+
+# Crawl-delay for polite crawling
+Crawl-delay: 10
