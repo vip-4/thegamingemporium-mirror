@@ -1,0 +1,144 @@
+name: Build Hugo Site
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/build-hugo.yml'
+      - 'seo/**'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    name: Build Hugo Site
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout this repo (for seo/ files)
+        uses: actions/checkout@v4
+        with:
+          path: build-repo
+
+      - name: Clone upstream The Gaming Emporium
+        run: |
+          git clone --depth 1 https://github.com/OldMcGroin/thegamingemporium.git upstream
+          cd upstream
+          echo "UPSTREAM_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: 'latest'
+          extended: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          cd upstream
+          pip3 install -q pyyaml requests 2>/dev/null || true
+
+      - name: Run generation scripts (full build.sh sequence)
+        run: |
+          cd upstream
+          echo "Generating game pages..."
+          python3 tools/generate_rating_projects.py
+          python3 tools/generate_game_pages.py
+          python3 tools/generate_collection_pages.py
+          
+          echo "Generating series pages..."
+          python3 tools/generate_series_pages.py
+          python3 tools/generate_browse_indexes.py
+          
+          echo "Generating search index..."
+          python3 tools/generate_search_index.py
+          
+          # Skip check-social (requires external services)
+          # python3 tools/refresh_manager.py
+          
+          echo "Generation complete."
+
+      - name: Build Hugo site
+        run: |
+          cd upstream
+          hugo --minify --baseURL "https://thegamingemporium-mirror.pages.dev/"
+          echo "Build output size: $(du -sh public)"
+
+      - name: Inject SEO/GEO enhancements
+        run: |
+          cd upstream/public
+          
+          # Copy SEO files to root
+          cp ../../build-repo/seo/robots.txt . 2>/dev/null || true
+          cp ../../build-repo/seo/sitemap.xml . 2>/dev/null || true
+          cp ../../build-repo/seo/llms.txt . 2>/dev/null || true
+          
+          # Enhance index.html with SEO meta if not present
+          if [ -f index.html ]; then
+            # Check if canonical exists
+            if ! grep -q 'rel="canonical"' index.html; then
+              # Insert after <head>
+              sed -i 's|<head>|<head>\n  <link rel="canonical" href="https://thegamingemporium-mirror.pages.dev/">|' index.html
+            fi
+            # Ensure robots meta
+            if ! grep -q 'name="robots"' index.html; then
+              sed -i 's|<head>|<head>\n  <meta name="robots" content="index, follow">|' index.html
+            fi
+          fi
+          
+          # Add _headers for Cloudflare
+          cat > _headers << 'HEADERSEOF'
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/images/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/robots.txt
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/sitemap.xml
+  Cache-Control: public, max-age=86400, must-revalidate
+
+/llms.txt
+  Cache-Control: public, max-age=86400, must-revalidate
+HEADERSEOF
+
+      - name: Verify build output
+        run: |
+          ls -la upstream/public/
+          echo "HTML files: $(find upstream/public -name '*.html' | wc -l)"
+          echo "Total files: $(find upstream/public -type f | wc -l)"
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tge-mirror
+          path: upstream/public/
+          retention-days: 7
+          compression-level: 6
+
+      - name: Upload build info
+        run: |
+          echo "upstream_sha=${UPSTREAM_SHA}" >> $GITHUB_OUTPUT
+    outputs:
+      upstream_sha: ${{ steps.verify-build.outputs.upstream_sha }}
